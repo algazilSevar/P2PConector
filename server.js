@@ -25,6 +25,16 @@ const httpServer = http.createServer((request, response) => {
         return;
     }
 
+    if (request.url === "/online_users" || request.url === "/users") {
+        response.writeHead(200, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({
+            status: "ok",
+            users: usersList(),
+            timestamp: new Date().toISOString()
+        }));
+        return;
+    }
+
     response.writeHead(404, { "Content-Type": "text/plain" });
     response.end("Not Found");
 });
@@ -43,7 +53,8 @@ function usersList() {
     return [...clients.values()].map((client) => ({
         id: client.userId,
         name: client.name || "مستخدم",
-        avatar_url: client.avatar_url || client.avatar_path || ""
+        avatar_url: client.avatar_url || client.avatar_path || "",
+        mediator_url: client.mediator_url || ""
     }));
 }
 
@@ -112,6 +123,7 @@ wss.on("connection", (ws) => {
                 ws.avatar_url = typeof data.avatar_url === "string"
                     ? data.avatar_url.slice(0, 500000)
                     : (typeof data.avatar_path === "string" ? data.avatar_path.slice(0, 500000) : "");
+                ws.mediator_url = typeof data.mediator_url === "string" ? data.mediator_url.slice(0, 300) : "";
 
                 console.log(`[+] User registered: ${data.id} (${ws.name})`);
                 sendUsers();
